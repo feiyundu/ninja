@@ -1,12 +1,12 @@
 /**
  * Copyright (C) the original author or authors.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,37 +17,35 @@
 package ninja.servlet;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.AbstractModule;
-import ninja.Bootstrap;
-import javax.servlet.ServletContextEvent;
-import ninja.utils.NinjaModeHelper;
-import ninja.utils.NinjaPropertiesImpl;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.servlet.GuiceServletContextListener;
-import java.util.Optional;
-import javax.servlet.ServletContext;
-import javax.websocket.server.ServerContainer;
+import ninja.Bootstrap;
 import ninja.utils.NinjaMode;
+import ninja.utils.NinjaModeHelper;
+import ninja.utils.NinjaPropertiesImpl;
 import ninja.utils.SwissKnife;
-import ninja.websockets.WebSockets;
-import ninja.websockets.jsr356.Jsr356WebSockets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.websocket.server.ServerContainer;
+import java.util.Optional;
+
 /**
  * define in web.xml:
- * 
+ *
  * <listener>
  *   <listener-class>ninja.NinjaServletListener</listener-class>
  * </listener>
- *  
+ *
  * @author zoza
- * 
+ *
  */
 public class NinjaServletListener extends GuiceServletContextListener {
     private static final Logger logger = LoggerFactory.getLogger(NinjaServletListener.class);
-    
+
     private volatile Bootstrap ninjaBootstrap;
     private NinjaPropertiesImpl ninjaProperties = null;
     private Optional<com.google.inject.Module> overrideModuleOpt = Optional.empty();
@@ -60,7 +58,7 @@ public class NinjaServletListener extends GuiceServletContextListener {
         }
         this.ninjaProperties = ninjaPropertiesImpl;
     }
-    
+
     public synchronized void setOverrideModule(com.google.inject.Module overrideModule) {
         Preconditions.checkNotNull(overrideModule);
         if (this.overrideModuleOpt.isPresent()) {
@@ -70,104 +68,103 @@ public class NinjaServletListener extends GuiceServletContextListener {
     }
 
     @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) { 
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
         contextPath = servletContextEvent.getServletContext().getContextPath();
-        
+
         // websocket enabled servlet containers populate this attribute with JSR 356
         // we save it here so we can inject it later into guice
         if (SwissKnife.doesClassExist(
-                WebsocketGuiceModuleCreator.WEBSOCKET_SERVER_CONTAINER_CLASSNAME, 
+                WebsocketGuiceModuleCreator.WEBSOCKET_SERVER_CONTAINER_CLASSNAME,
                 this)) {
-            
+
             this.webSocketModule = WebsocketGuiceModuleCreator.getWebsocketServerContainerIfPossible(
-                    servletContextEvent.getServletContext()); 
+                    servletContextEvent.getServletContext());
         }
 
         super.contextInitialized(servletContextEvent);
     }
-   
+
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         ninjaBootstrap.shutdown();
         super.contextDestroyed(servletContextEvent);
     }
-    
+
     /**
      * Only available after context initialization attempted.
      */
     public Bootstrap getNinjaBootstrap() {
         return this.ninjaBootstrap;
     }
-   
+
     /**
      * Getting the injector is done via double locking in conjunction
      * with volatile keyword for thread-safety.
      * See also: http://en.wikipedia.org/wiki/Double-checked_locking
-     * 
+     *
      * @return The injector for this application.
      */
     @Override
     public Injector getInjector() {
-        
+
         // fetch instance variable into method, so that we access the volatile
         // global variable only once - that's better performance wise.
         Bootstrap ninjaBootstrapLocal = ninjaBootstrap;
-        
+
         if (ninjaBootstrapLocal == null) {
 
-            synchronized(this) {
-                
+            synchronized (this) {
+
                 ninjaBootstrapLocal = ninjaBootstrap;
-                
+
                 if (ninjaBootstrapLocal == null) {
-                    
+
                     // if properties 
                     if (ninjaProperties == null) {
-                        
-                        NinjaMode ninjaMode = NinjaModeHelper.determineModeFromSystemPropertiesOrProdIfNotSet();      
+
+                        NinjaMode ninjaMode = NinjaModeHelper.determineModeFromSystemPropertiesOrProdIfNotSet();
                         ninjaProperties = NinjaPropertiesImpl.builder()
-                            .withMode(ninjaMode)
-                            .build();   
-                    
+                                .withMode(ninjaMode)
+                                .build();
+
                     }
-                
-                    ninjaBootstrap 
+
+                    ninjaBootstrap
                             = createNinjaBootstrap(ninjaProperties, overrideModuleOpt, contextPath);
                     ninjaBootstrapLocal = ninjaBootstrap;
 
                 }
-            
+
             }
-        
+
         }
-        
+
         return ninjaBootstrapLocal.getInjector();
 
     }
-    
 
-    
+
     private Bootstrap createNinjaBootstrap(
             NinjaPropertiesImpl ninjaProperties,
             Optional<com.google.inject.Module> overrideModuleOpt,
             String contextPath) {
-    
+
         // we set the contextpath.
         ninjaProperties.setContextPath(contextPath);
-        
+
         ninjaBootstrap = new NinjaServletBootstrap(ninjaProperties, overrideModuleOpt);
-        
+
         // if websocket container present then enable jsr-356 websockets
         webSocketModule.ifPresent(module -> {
             ninjaBootstrap.addModule(module);
         });
-        
+
         ninjaBootstrap.boot();
-        
+
         return ninjaBootstrap;
     }
-    
-    
+
+
     /**
      * Huh. Why is there a separate class like this. Couldn't we not just do
      * everything directly in NinjaServletListener? No.
@@ -184,8 +181,8 @@ public class NinjaServletListener extends GuiceServletContextListener {
      * classloader to actually load it.
      */
     static class WebsocketGuiceModuleCreator {
-        
-        public static final String WEBSOCKET_SERVER_CONTAINER_CLASSNAME 
+
+        public static final String WEBSOCKET_SERVER_CONTAINER_CLASSNAME
                 = "javax.websocket.server.ServerContainer";
 
         public static Optional<Module> getWebsocketServerContainerIfPossible(
@@ -193,25 +190,13 @@ public class NinjaServletListener extends GuiceServletContextListener {
 
             ServerContainer websocketServerContainer
                     = (ServerContainer) servletContext.getAttribute(WEBSOCKET_SERVER_CONTAINER_CLASSNAME);
-            
+
             logger.info(
-                "Using JSR-356 websocket container {}",
-                websocketServerContainer
+                    "Using JSR-356 websocket container {}",
+                    websocketServerContainer
             );
 
-            if (websocketServerContainer != null) {
-                Module websocketsModule = new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ServerContainer.class).toInstance(websocketServerContainer);
-                        bind(WebSockets.class).to(Jsr356WebSockets.class);
-                    }
-                };
-                return Optional.of(websocketsModule);
-
-            } else {
-                return Optional.empty();
-            }
+            return Optional.empty();
         }
 
     }

@@ -16,7 +16,6 @@
 
 package conf;
 
-import ninja.metrics.InstrumentedNinja;
 
 /**
  * Collection Metrics data on the routes of this Ninja app.
@@ -24,6 +23,6 @@ import ninja.metrics.InstrumentedNinja;
  * @author James Moger
  *
  */
-public class Ninja extends InstrumentedNinja {
+public class Ninja {
 
 }

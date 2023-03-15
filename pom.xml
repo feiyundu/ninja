@@ -51,13 +51,6 @@
     <modules>
         <module>ninja-core</module>
         <module>ninja-postoffice</module>
-        <module>ninja-jaxy-routes</module>
-        <module>ninja-websockets-jsr356</module>
-        <module>ninja-metrics</module>
-        <module>ninja-metrics-graphite</module>
-        <module>ninja-metrics-ganglia</module>
-        <module>ninja-metrics-librato</module>
-        <module>ninja-metrics-influxdb</module>
         <module>ninja-servlet</module>
         <module>ninja-db-classic</module>
         <module>ninja-standalone</module>
@@ -65,9 +58,6 @@
         <module>ninja-servlet-integration-test</module>
         <module>ninja-servlet-jpa-blog-integration-test</module>
         <module>ninja-maven-plugin</module>
-        <!-- archetypes -->
-        <module>ninja-servlet-jpa-blog-archetype</module>
-        <module>ninja-servlet-archetype-simple</module>
     </modules>
 
     <!-- pin encoding to utf-8 -->
@@ -433,23 +423,6 @@
                 <version>${project.version}</version>
             </dependency>
             
-            <dependency>
-                <groupId>org.ninjaframework</groupId>
-                <artifactId>ninja-metrics</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.ninjaframework</groupId>
-                <artifactId>ninja-jaxy-routes</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            
-            <dependency>
-                <groupId>org.ninjaframework</groupId>
-                <artifactId>ninja-websockets-jsr356</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.ninjaframework</groupId>

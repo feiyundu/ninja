@@ -16,7 +16,6 @@
 
 package conf;
 
-import ninja.metrics.MetricsModule;
 
 import com.google.inject.AbstractModule;
 
@@ -40,7 +39,6 @@ public class Module extends AbstractModule {
         // Bind the UDP ping controller so it starts up on server start
         // bind(UdpPingController.class);
 
-        install(new MetricsModule());
 
     }
 
